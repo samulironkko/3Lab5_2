@@ -7,47 +7,51 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.Click;
+import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.ViewById;
 
+import static java.lang.Thread.sleep;
 
-public class MainActivity extends AppCompatActivity implements MyThread.MyInterface, View.OnClickListener {
+@EActivity(R.layout.activity_main)
+public class MainActivity extends AppCompatActivity {
 
     int counter = 1;
+
+    @ViewById(R.id.textView)
     TextView textView;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Button button = findViewById(R.id.button);
-        button.setOnClickListener(this);
-        textView = findViewById(R.id.textView);
+
+    @Background
+    void processOnBackground(int counter) {
+        int progress = 0;
+        int id = counter;
+        try {
+            while (progress < 100) {
+                progress = progress + 10;
+                updateTextView(id, progress);
+                sleep(3000);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @UiThread
-    public void updateStatus(final int progress, final int id) {
-        MainActivity.this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                textView.append("\nThread: " + id + " On Progress: " + progress + "%");
-                if (progress == 100) {
-                    textView.append("\nThread: " + id + " On_Complete");
-                }
-            }
-        });
+    void updateTextView(int id, int progress) {
+        textView.append("\nThread: " + id + " On Progress: " + progress + "%");
+        if (progress == 100) {
+            textView.append("\nThread: " + id + " On_Complete");
+        }
     }
 
-    public void startThread() {
-        //threads[counter] = new MyThread(this, counter);
-        //threads[counter].start();
-        MyThread myThread = new MyThread(this, counter);
-        myThread.start();
-        textView.append("\nNew thread created with Id:" + counter);
+
+    @Click(R.id.button)
+    void onButtonClicked(View view) {
+        processOnBackground(counter);
         counter++;
     }
 
-    @Override
-    public void onClick(View v) {
-        startThread();
-    }
 }
